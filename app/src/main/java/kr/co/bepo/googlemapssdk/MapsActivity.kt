@@ -1,32 +1,35 @@
 package kr.co.bepo.googlemapssdk
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.MarkerOptions
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kr.co.bepo.googlemapssdk.databinding.ActivityMapsBinding
+import kr.co.bepo.googlemapssdk.misc.CameraAndViewport
+import kr.co.bepo.googlemapssdk.misc.TypeAndStyle
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
-    private lateinit var binding: ActivityMapsBinding
+    private val binding: ActivityMapsBinding by lazy { ActivityMapsBinding.inflate(layoutInflater) }
+
+    private val typeAndStyle: TypeAndStyle by lazy { TypeAndStyle() }
+    private val cameraAndViewport: CameraAndViewport by lazy { CameraAndViewport() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -39,53 +42,81 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.normal_map -> {
-                mMap.mapType = GoogleMap.MAP_TYPE_NORMAL
-            }
-            R.id.hybrid_map -> {
-                mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
-            }
-            R.id.satellite_map -> {
-                mMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
-            }
-            R.id.terrain_map -> {
-                mMap.mapType = GoogleMap.MAP_TYPE_TERRAIN
-            }
-            R.id.none_map -> {
-                mMap.mapType = GoogleMap.MAP_TYPE_NONE
-            }
-        }
-
+        typeAndStyle.setMapType(item, mMap)
         return super.onOptionsItemSelected(item)
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        val seoul = LatLng(37.55176899273707, 126.99088753745077)
-        mMap.addMarker(MarkerOptions().position(seoul).title("Marker in Seoul"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(seoul, 10f))
+        val losAngeles = LatLng(34.04692127928215, -118.24748421830992)
+        val newYork = LatLng(40.71614203933524, -74.00440676650565)
+        mMap.addMarker(MarkerOptions().position(losAngeles).title("Marker in Los Angeles"))
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(losAngeles, 10f))
         mMap.uiSettings.apply {
             isZoomControlsEnabled = true
         }
-        setMapStyle(mMap)
-    }
+        typeAndStyle.setMapStyle(mMap, this)
 
-    private fun setMapStyle(googleMap: GoogleMap) {
-        try {
-            val success = googleMap.setMapStyle(
-                MapStyleOptions.loadRawResourceStyle(
-                    this,
-                    R.raw.style
-                )
+        lifecycleScope.launch {
+            delay(4_000L)
+
+            // 3f 만큼 카메라 줌
+//            mMap.moveCamera(CameraUpdateFactory.zoomBy(3f))
+
+            // newYork 으로 카메라 이동
+//            mMap.moveCamera(CameraUpdateFactory.newLatLng(newYork))
+
+            // (-100f,200f) 만큼 카메라 이동
+//            mMap.moveCamera(CameraUpdateFactory.scrollBy(-100f, 200f))
+
+            // 경계 중앙(zoom:10f) 으로 이동
+//            mMap.moveCamera(
+//                CameraUpdateFactory.newLatLngZoom(
+//                    cameraAndViewport.melbourneBounds.center,
+//                    10f
+//                )
+//            )
+
+            // 경계 지정 후 이동
+//            mMap.moveCamera(
+//                CameraUpdateFactory.newLatLngBounds(
+//                    cameraAndViewport.melbourneBounds, 0
+//                )
+//            )
+
+            // 경계 이상으로 이동 불가
+//            mMap.setLatLngBoundsForCameraTarget(cameraAndViewport.melbourneBounds)
+
+            // 애니메이션 효과를 사용하여 카메라 이동
+//            mMap.animateCamera(
+//                CameraUpdateFactory.newLatLngBounds(
+//                    cameraAndViewport.melbourneBounds,
+//                    100
+//                ), 2_000, null
+//            )
+
+            // 애니메이션 효과를 사용하여 15f 만큼 카메라 줌
+//            mMap.animateCamera(CameraUpdateFactory.zoomTo(15f), 2_000, null)
+
+            // 애니메이션 효과를 사용하여 (200f,0f) 만큼 카메라 이동
+//            mMap.animateCamera(CameraUpdateFactory.scrollBy(200f, 0f), 2_000, null)
+
+            // 애니메이션 효과가 끝나거나 취소됐을 때 행동
+            mMap.animateCamera(
+                CameraUpdateFactory.newCameraPosition(cameraAndViewport.losAngeles),
+                2_000, object : GoogleMap.CancelableCallback {
+                    override fun onFinish() {
+                        Toast.makeText(this@MapsActivity, "Finished", Toast.LENGTH_SHORT).show()
+                    }
+
+                    override fun onCancel() {
+                        Toast.makeText(this@MapsActivity, "Canceled", Toast.LENGTH_SHORT).show()
+                    }
+                }
             )
 
-            if (!success) {
-                Log.d("Maps", "Failed to add Style.")
-            }
-        } catch (e: Exception) {
-            Log.d("Maps", e.toString())
         }
+
     }
 }
