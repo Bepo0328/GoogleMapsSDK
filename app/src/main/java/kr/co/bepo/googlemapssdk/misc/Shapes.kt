@@ -2,10 +2,7 @@ package kr.co.bepo.googlemapssdk.misc
 
 import android.graphics.Color
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.CircleOptions
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.PolygonOptions
-import com.google.android.gms.maps.model.PolylineOptions
+import com.google.android.gms.maps.model.*
 import kotlinx.coroutines.delay
 import kr.co.bepo.googlemapssdk.R
 
@@ -27,17 +24,22 @@ class Shapes {
     private val p03 = LatLng(33.80888822068028, -118.82665068663746)
 
     suspend fun addPolyline(mMap: GoogleMap) {
+
+        // val pattern = listOf(Dot(), Gap(30f), Dash(50f), Gap(30f))
+
         val polyline = mMap.addPolyline(
             PolylineOptions().apply {
                 add(losAngeles, newYork, madrid)
-                width(5f)
+                width(120f)
                 color(Color.BLUE)
                 geodesic(true)
-                clickable(true)
+                jointType(JointType.ROUND)
+                startCap(CustomCap(BitmapDescriptorFactory.fromResource(R.drawable.custom_marker), 100f))
+                endCap(ButtCap())
             }
         )
 
-        delay(5_000)
+        delay(5_000L)
 
         polyline.points = listOf(losAngeles, panama, madrid)
     }
@@ -53,7 +55,7 @@ class Shapes {
         )
     }
 
-    suspend fun addCircle(mMap: GoogleMap) {
+    fun addCircle(mMap: GoogleMap) {
         val circle = mMap.addCircle(
             CircleOptions().apply {
                 center(losAngeles)
@@ -63,9 +65,5 @@ class Shapes {
 
             }
         )
-
-        delay(4_000L)
-
-        circle.fillColor = R.color.black
     }
 }
