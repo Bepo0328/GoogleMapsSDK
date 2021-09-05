@@ -1,10 +1,8 @@
 package kr.co.bepo.googlemapssdk
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -13,28 +11,23 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.maps.model.Polyline
-import com.google.android.gms.maps.model.PolylineOptions
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kr.co.bepo.googlemapssdk.databinding.ActivityMapsBinding
-import kr.co.bepo.googlemapssdk.databinding.CustomInfoWindowBinding
 import kr.co.bepo.googlemapssdk.misc.CameraAndViewport
-import kr.co.bepo.googlemapssdk.misc.CustomInfoAdapter
+import kr.co.bepo.googlemapssdk.misc.Shapes
 import kr.co.bepo.googlemapssdk.misc.TypeAndStyle
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnPolylineClickListener {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private val binding: ActivityMapsBinding by lazy { ActivityMapsBinding.inflate(layoutInflater) }
 
     private val losAngeles = LatLng(34.04692127928215, -118.24748421830992)
     private val newYork = LatLng(40.71614203933524, -74.00440676650565)
-    private val madrid = LatLng(40.639871895206674, -3.5627974558481665)
-    private val panama = LatLng(8.457442357239337, -79.93696458060398)
 
     private val typeAndStyle: TypeAndStyle by lazy { TypeAndStyle() }
     private val cameraAndViewport: CameraAndViewport by lazy { CameraAndViewport() }
+    private val shapes by lazy { Shapes() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,34 +66,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnPolyli
 
         typeAndStyle.setMapStyle(mMap, this)
 
-        mMap.setOnPolylineClickListener(this)
+        shapes.addPolygon(mMap)
 
         lifecycleScope.launch {
-            addPolyline()
         }
-    }
-
-    private suspend fun addPolyline() {
-        val polyline = mMap.addPolyline(
-            PolylineOptions().apply {
-                add(losAngeles, newYork, madrid)
-                width(5f)
-                color(Color.BLUE)
-                geodesic(true)
-                clickable(true)
-            }
-        )
-
-        delay(5_000)
-
-        val newList = listOf<LatLng>(
-            losAngeles, panama, madrid
-        )
-
-        polyline.points = newList
-    }
-
-    override fun onPolylineClick(polyline: Polyline) {
-        Toast.makeText(this, "Clicked", Toast.LENGTH_SHORT).show()
     }
 }
