@@ -66,9 +66,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         typeAndStyle.setMapStyle(mMap, this)
 
-        shapes.addPolygon(mMap)
-
         lifecycleScope.launch {
+            shapes.addCircle(mMap)
+
         }
     }
 }

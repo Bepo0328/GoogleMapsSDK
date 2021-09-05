@@ -2,6 +2,7 @@ package kr.co.bepo.googlemapssdk.misc
 
 import android.graphics.Color
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolygonOptions
 import com.google.android.gms.maps.model.PolylineOptions
@@ -38,11 +39,7 @@ class Shapes {
 
         delay(5_000)
 
-        val newList = listOf<LatLng>(
-            losAngeles, panama, madrid
-        )
-
-        polyline.points = newList
+        polyline.points = listOf(losAngeles, panama, madrid)
     }
 
     fun addPolygon(mMap: GoogleMap) {
@@ -54,5 +51,21 @@ class Shapes {
                 addHole(listOf(p00, p01, p02, p03))
             }
         )
+    }
+
+    suspend fun addCircle(mMap: GoogleMap) {
+        val circle = mMap.addCircle(
+            CircleOptions().apply {
+                center(losAngeles)
+                radius(50_000.0)
+                fillColor(R.color.purple_500)
+                strokeColor(R.color.purple_500)
+
+            }
+        )
+
+        delay(4_000L)
+
+        circle.fillColor = R.color.black
     }
 }
