@@ -1,10 +1,16 @@
 package kr.co.bepo.googlemapssdk
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -70,15 +76,45 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         typeAndStyle.setMapStyle(mMap, this)
 
-//        val groundOverlay = overlays.addGroundOverlay(mMap)
-        val groundOverlay = overlays.addGroundOverlayWithTag(mMap)
+        checkLocationPermission()
+    }
 
+    private fun checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            mMap.isMyLocationEnabled = true
+            Toast.makeText(this, "Already Enabled", Toast.LENGTH_SHORT).show()
+        } else{
+            requestPermission()
+        }
+    }
 
-        lifecycleScope.launch {
-            delay(4_000L)
-//            groundOverlay?.remove() // 삭제
-//            groundOverlay?.transparency = 0.5f // 50% 투명하게
-            Log.d("Maps", groundOverlay?.tag.toString())
+    private fun requestPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+            1
+        )
+    }
+
+    @SuppressLint("MissingPermission")
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != 1) {
+            return
+        }
+
+        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Granted!", Toast.LENGTH_SHORT).show()
+            mMap.isMyLocationEnabled = true
+        }
+        else {
+            Toast.makeText(this, "We need your permission!", Toast.LENGTH_SHORT).show()
         }
     }
 }
