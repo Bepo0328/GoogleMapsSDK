@@ -1,6 +1,7 @@
 package kr.co.bepo.googlemapssdk
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
@@ -11,9 +12,11 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kr.co.bepo.googlemapssdk.databinding.ActivityMapsBinding
 import kr.co.bepo.googlemapssdk.misc.CameraAndViewport
+import kr.co.bepo.googlemapssdk.misc.Overlays
 import kr.co.bepo.googlemapssdk.misc.Shapes
 import kr.co.bepo.googlemapssdk.misc.TypeAndStyle
 
@@ -28,6 +31,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val typeAndStyle: TypeAndStyle by lazy { TypeAndStyle() }
     private val cameraAndViewport: CameraAndViewport by lazy { CameraAndViewport() }
     private val shapes by lazy { Shapes() }
+    private val overlays by lazy { Overlays() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,8 +70,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         typeAndStyle.setMapStyle(mMap, this)
 
+//        val groundOverlay = overlays.addGroundOverlay(mMap)
+        val groundOverlay = overlays.addGroundOverlayWithTag(mMap)
+
+
         lifecycleScope.launch {
-            shapes.addPolyline(mMap)
+            delay(4_000L)
+//            groundOverlay?.remove() // 삭제
+//            groundOverlay?.transparency = 0.5f // 50% 투명하게
+            Log.d("Maps", groundOverlay?.tag.toString())
         }
     }
 }
