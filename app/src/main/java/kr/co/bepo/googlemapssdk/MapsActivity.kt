@@ -19,8 +19,11 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.TileOverlayOptions
 import com.google.maps.android.clustering.ClusterManager
 import com.google.maps.android.data.geojson.GeoJsonLayer
+import com.google.maps.android.heatmaps.Gradient
+import com.google.maps.android.heatmaps.HeatmapTileProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kr.co.bepo.googlemapssdk.databinding.ActivityMapsBinding
@@ -39,8 +42,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val shapes by lazy { Shapes() }
     private val overlays by lazy { Overlays() }
 
-    private lateinit var clusterManger: ClusterManager<MyItem>
-
     private val locationList = listOf(
         LatLng(33.987459169366396, -117.43514666922263),
         LatLng(34.02844168496524, -116.80892595820784),
@@ -52,32 +53,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         LatLng(33.549084352008315, -110.1621974436902),
         LatLng(33.484967570542835, -108.95919451960859),
         LatLng(32.50364494635834, -106.82235368711534),
-    )
-
-    private val titleList = listOf(
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "9",
-        "10",
-    )
-
-    private val snippetList = listOf(
-        "Lorem Ipsum",
-        "Lorem Ipsum",
-        "Lorem Ipsum",
-        "Lorem Ipsum",
-        "Lorem Ipsum",
-        "Lorem Ipsum",
-        "Lorem Ipsum",
-        "Lorem Ipsum",
-        "Lorem Ipsum",
-        "Lorem Ipsum",
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -117,56 +92,32 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         typeAndStyle.setMapStyle(mMap, this)
 
-        clusterManger = ClusterManager(this, mMap)
-        mMap.setOnCameraIdleListener(clusterManger)
-        mMap.setOnMarkerClickListener(clusterManger)
-        addMarkers()
+        addHeatMap()
     }
 
-    private fun addMarkers() {
-        locationList.zip(titleList).zip(snippetList).forEach { pair ->
-            val myItem =
-                MyItem(pair.first.first, "Title: ${pair.first.second}", "Snippet: ${pair.second}")
-            clusterManger.addItem(myItem)
-        }
-    }
+    private fun addHeatMap() {
 
-    private fun checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED
-        ) {
-            mMap.isMyLocationEnabled = true
-            Toast.makeText(this, "Already Enabled", Toast.LENGTH_SHORT).show()
-        } else{
-            requestPermission()
-        }
-    }
-
-    private fun requestPermission() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-            1
+        val colors = intArrayOf(
+            Color.rgb(0, 128, 255), // Blue
+            Color.rgb(204, 0, 204), // Pink
+            Color.rgb(255, 255, 51), // Yellow
         )
-    }
 
-    @SuppressLint("MissingPermission")
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode != 1) {
-            return
-        }
+        val startPoints = floatArrayOf(0.2f, 0.5f, 0.8f)
+        val gradient = Gradient(colors, startPoints)
 
-        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "Granted!", Toast.LENGTH_SHORT).show()
-            mMap.isMyLocationEnabled = true
-        }
-        else {
-            Toast.makeText(this, "We need your permission!", Toast.LENGTH_SHORT).show()
+        val provider = HeatmapTileProvider.Builder()
+            .data(locationList)
+            .gradient(gradient)
+            .opacity(0.30)
+            .build()
+        val overlay = mMap.addTileOverlay(TileOverlayOptions().tileProvider(provider))
+
+        lifecycleScope.launch {
+            delay(5_000L)
+            overlay.clearTileCache()
+            provider.setRadius(50)
+            overlay.remove()
         }
     }
 }
