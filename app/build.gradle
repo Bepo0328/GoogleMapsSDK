@@ -56,4 +56,6 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycleVersion"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion"
 
+    // Maps SDK Utility Library
+    implementation "com.google.maps.android:maps-utils-ktx:$mapsUtilsKtxVersion"
 }

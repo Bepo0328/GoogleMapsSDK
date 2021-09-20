@@ -3,6 +3,7 @@ package kr.co.bepo.googlemapssdk
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -18,6 +19,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.maps.android.data.geojson.GeoJsonLayer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kr.co.bepo.googlemapssdk.databinding.ActivityMapsBinding
@@ -76,7 +78,26 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         typeAndStyle.setMapStyle(mMap, this)
 
-        checkLocationPermission()
+        //checkLocationPermission()
+
+        val layer = GeoJsonLayer(mMap, R.raw.map, this)
+        layer.addLayerToMap()
+
+        val polygonStyle = layer.defaultPolygonStyle
+        polygonStyle.apply {
+//            fillColor = ContextCompat.getColor(this@MapsActivity, R.color.purple_200)
+            fillColor = Color.BLUE
+        }
+
+        layer.setOnFeatureClickListener {
+            Log.d("MapsActivity", "Feature ${it.getProperty("country")}")
+        }
+
+        for (feature in layer.features) {
+            if (feature.hasProperty("country")) {
+                Log.d("MapsActivity", "Success")
+            }
+        }
     }
 
     private fun checkLocationPermission() {
