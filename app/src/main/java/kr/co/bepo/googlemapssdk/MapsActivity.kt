@@ -19,14 +19,12 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.maps.android.clustering.ClusterManager
 import com.google.maps.android.data.geojson.GeoJsonLayer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kr.co.bepo.googlemapssdk.databinding.ActivityMapsBinding
-import kr.co.bepo.googlemapssdk.misc.CameraAndViewport
-import kr.co.bepo.googlemapssdk.misc.Overlays
-import kr.co.bepo.googlemapssdk.misc.Shapes
-import kr.co.bepo.googlemapssdk.misc.TypeAndStyle
+import kr.co.bepo.googlemapssdk.misc.*
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -40,6 +38,47 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val cameraAndViewport: CameraAndViewport by lazy { CameraAndViewport() }
     private val shapes by lazy { Shapes() }
     private val overlays by lazy { Overlays() }
+
+    private lateinit var clusterManger: ClusterManager<MyItem>
+
+    private val locationList = listOf(
+        LatLng(33.987459169366396, -117.43514666922263),
+        LatLng(34.02844168496524, -116.80892595820784),
+        LatLng(33.987459169366396, -116.01791032324176),
+        LatLng(33.78681578842077, -115.11153826995461),
+        LatLng(33.850708044143765, -114.2546046745436),
+        LatLng(33.58112491982409, -112.71651872998432),
+        LatLng(33.51245201506937, -110.99166521283668),
+        LatLng(33.549084352008315, -110.1621974436902),
+        LatLng(33.484967570542835, -108.95919451960859),
+        LatLng(32.50364494635834, -106.82235368711534),
+    )
+
+    private val titleList = listOf(
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+    )
+
+    private val snippetList = listOf(
+        "Lorem Ipsum",
+        "Lorem Ipsum",
+        "Lorem Ipsum",
+        "Lorem Ipsum",
+        "Lorem Ipsum",
+        "Lorem Ipsum",
+        "Lorem Ipsum",
+        "Lorem Ipsum",
+        "Lorem Ipsum",
+        "Lorem Ipsum",
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,25 +117,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         typeAndStyle.setMapStyle(mMap, this)
 
-        //checkLocationPermission()
+        clusterManger = ClusterManager(this, mMap)
+        mMap.setOnCameraIdleListener(clusterManger)
+        mMap.setOnMarkerClickListener(clusterManger)
+        addMarkers()
+    }
 
-        val layer = GeoJsonLayer(mMap, R.raw.map, this)
-        layer.addLayerToMap()
-
-        val polygonStyle = layer.defaultPolygonStyle
-        polygonStyle.apply {
-//            fillColor = ContextCompat.getColor(this@MapsActivity, R.color.purple_200)
-            fillColor = Color.BLUE
-        }
-
-        layer.setOnFeatureClickListener {
-            Log.d("MapsActivity", "Feature ${it.getProperty("country")}")
-        }
-
-        for (feature in layer.features) {
-            if (feature.hasProperty("country")) {
-                Log.d("MapsActivity", "Success")
-            }
+    private fun addMarkers() {
+        locationList.zip(titleList).zip(snippetList).forEach { pair ->
+            val myItem =
+                MyItem(pair.first.first, "Title: ${pair.first.second}", "Snippet: ${pair.second}")
+            clusterManger.addItem(myItem)
         }
     }
 
